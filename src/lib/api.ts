@@ -3,16 +3,7 @@ import type { SearchRequest, SearchResponse, VectorStoreStats } from './types';
 const API_BASE_URL = import.meta.env.DEV ? '/api' : 'https://api.omura.fun';
 
 export const getBlobUrl = (blobId: string) => {
-    // For images, we can use the direct URL if needed, but proxy is safer for dev.
-    // However, if we deploy this statically, we need the real URL.
-    // For now, let's stick to the proxy path for dev, and we can adjust for prod envs.
-    // Actually, for static build deployment, we need the FULL URL because there's no Vite proxy in production.
-    // But adhering to "refining" based on CORS, let's handle both.
-    // Simpler approach: Use full URL for prod (static), proxy for dev.
-    if (import.meta.env.DEV) {
-        return `${API_BASE_URL}/blob/${blobId}`;
-    }
-    return `https://api.omura.fun/blob/${blobId}`;
+    return `https://walrus-mainnet-aggregator.redundex.com/v1/blobs/${blobId}`;
 };
 
 const fetchWithRetry = async (url: string, options: RequestInit = {}, retries = 3, backoff = 500): Promise<Response> => {
