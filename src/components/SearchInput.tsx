@@ -45,10 +45,10 @@ export const SearchInput: React.FC<SearchInputProps & { compact?: boolean }> = (
                 className={`absolute top-1/2 -translate-y-1/2 
                    bg-ocean-300 border-2 border-black font-bold 
                    shadow-retro-sm hover:shadow-retro active:shadow-none active:translate-y-0.5
-                   transition-all
+                   transition-all flex items-center justify-center
                    ${compact
                         ? 'right-1.5 px-3 py-1 text-xs'
-                        : 'right-3 px-6 py-2 text-lg'
+                        : 'right-3 px-4 md:px-6 py-2 text-sm md:text-lg'
                     }`}
             >
                 GO

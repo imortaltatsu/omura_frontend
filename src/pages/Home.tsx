@@ -40,25 +40,25 @@ export const Home: React.FC<HomeProps> = ({ onNavigate }) => {
                 <div className="absolute top-1/4 left-10 w-32 h-32 bg-ocean-300 border-3 border-black shadow-retro animate-float opacity-80 hidden lg:block rotate-12"></div>
                 <div className="absolute bottom-1/4 right-10 w-24 h-24 bg-coral border-3 border-black shadow-retro animate-float animation-delay-2000 opacity-80 hidden lg:block -rotate-12 rounded-none"></div>
 
-                <div className="mb-12 relative flex-center flex-col transform hover:scale-105 transition-transform duration-500">
-                    <div className="w-56 h-56 bg-ice border-4 border-black shadow-retro-lg flex-center mb-8 overflow-hidden relative group">
+                <div className="mb-8 md:mb-12 relative flex-center flex-col transform hover:scale-105 transition-transform duration-500">
+                    <div className="w-40 h-40 md:w-56 md:h-56 bg-white border-4 border-black shadow-retro-lg flex-center mb-6 md:mb-8 overflow-hidden relative group">
                         <div className="absolute inset-0 bg-ocean-200 opacity-0 group-hover:opacity-20 transition-opacity"></div>
                         <img src="/logo.png" alt="Omura Walrus" className="w-full h-full object-cover p-2" />
                     </div>
-                    <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-black mb-2 bg-white px-6 py-2 border-3 border-black shadow-retro" style={{ textShadow: 'none' }}>
+                    <h1 className="text-5xl md:text-8xl font-black tracking-tighter text-black mb-2 bg-white px-4 md:px-6 py-2 border-3 border-black shadow-retro" style={{ textShadow: 'none' }}>
                         OMURA
                     </h1>
                     <div className="flex gap-2 mt-4">
-                        <span className="font-mono text-sm font-bold bg-ocean-400 text-white border-2 border-black px-3 py-1 shadow-retro-sm">
+                        <span className="font-mono text-xs md:text-sm font-bold bg-ocean-400 text-white border-2 border-black px-2 md:px-3 py-1 shadow-retro-sm">
                             BETA
                         </span>
-                        <span className="font-mono text-sm bg-white border-2 border-black px-3 py-1 shadow-retro-sm">
+                        <span className="font-mono text-xs md:text-sm bg-white border-2 border-black px-2 md:px-3 py-1 shadow-retro-sm">
                             v0.1.0
                         </span>
                     </div>
                 </div>
 
-                <SearchInput onSearch={handleSearch} className="mb-12 w-full" />
+                <SearchInput onSearch={handleSearch} className="mb-8 md:mb-12 w-full px-4 md:px-0" />
 
                 {/* Stats Grid */}
                 {stats && (

@@ -1,6 +1,6 @@
 import type { SearchRequest, SearchResponse, VectorStoreStats } from './types';
 
-const API_BASE_URL = '/api'; // Use proxy for development
+const API_BASE_URL = import.meta.env.DEV ? '/api' : 'https://api.omura.fun';
 
 export const getBlobUrl = (blobId: string) => {
     // For images, we can use the direct URL if needed, but proxy is safer for dev.
