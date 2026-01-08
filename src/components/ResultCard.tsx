@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { SearchResult } from '../lib/types';
-import { getBlobUrl } from '../lib/api';
+import { getBlobUrl, getBlobPageUrl } from '../lib/api';
 import { FileQuestion } from 'lucide-react';
 
 interface ResultCardProps {
@@ -11,6 +11,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({ result }) => {
     const [error, setError] = useState(false);
     const [isRevealed, setIsRevealed] = useState(false);
     const imageUrl = getBlobUrl(result.blob_id);
+    const pageUrl = getBlobPageUrl(result.blob_id);
     const isNsfw = result.is_nsfw || false;
 
     return (
@@ -40,7 +41,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({ result }) => {
                                     </button>
                                 </div>
                             )}
-                            <a href={imageUrl} target="_blank" rel="noopener noreferrer" className={`absolute inset-0 ${isNsfw && !isRevealed ? 'pointer-events-none' : ''}`} />
+                            <a href={pageUrl} target="_blank" rel="noopener noreferrer" className={`absolute inset-0 ${isNsfw && !isRevealed ? 'pointer-events-none' : ''}`} />
                         </>
                     ) : (
                         <div className="text-gray-400 flex flex-col items-center p-8">
