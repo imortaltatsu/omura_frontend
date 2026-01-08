@@ -3,7 +3,7 @@ import type { SearchRequest, SearchResponse, VectorStoreStats } from './types';
 const API_BASE_URL = import.meta.env.DEV ? '/api' : 'https://api.omura.fun';
 
 export const getBlobUrl = (blobId: string) => {
-    return `https://walrus-mainnet-aggregator.redundex.com/v1/blobs/${blobId}`;
+    return `https://api.omura.fun/blob/${blobId}`;
 };
 
 const fetchWithRetry = async (url: string, options: RequestInit = {}, retries = 3, backoff = 500): Promise<Response> => {
