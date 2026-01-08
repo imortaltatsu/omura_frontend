@@ -6,8 +6,33 @@
 
 @layer base {
   body {
-    @apply bg-ocean-50 text-black font-sans min-h-screen overflow-x-hidden;
+    @apply bg-ocean-50 dark:bg-slate-900 text-black dark:text-white font-sans min-h-screen overflow-x-hidden transition-colors duration-300;
+    --text-shadow-color: #fff;
   }
+
+  .dark body {
+    --text-shadow-color: #fff;
+    /* Switch to white shadow for dark mode text */
+  }
+}
+
+/* Solarized/High-Contrast Dark Mode Utilities */
+/* User requested NO white shadows */
+.dark .shadow-retro {
+  box-shadow: 4px 4px 0px 0px #000000;
+  /* Black shadow merges with bg */
+}
+
+.dark .shadow-retro-sm {
+  box-shadow: 2px 2px 0px 0px #000000;
+}
+
+.dark .shadow-retro-lg {
+  box-shadow: 8px 8px 0px 0px #000000;
+}
+
+.dark .text-shadow-retro {
+  text-shadow: 2px 2px 0px #000;
 }
 
 @layer utilities {

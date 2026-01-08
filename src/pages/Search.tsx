@@ -50,13 +50,13 @@ export const Search: React.FC = () => {
     const tabs = ['All', 'Images', 'Web', 'Audio', 'Video'];
 
     return (
-        <div className="min-h-screen bg-ocean-50 relative">
+        <div className="min-h-screen bg-ocean-50 dark:bg-zinc-900 relative transition-colors duration-300">
             {/* Retro Grid Background - Fixed to stay behind content */}
-            <div className="fixed inset-0 z-0 pointer-events-none"
+            <div className="fixed inset-0 z-0 pointer-events-none opacity-5 dark:opacity-10"
                 style={{
-                    backgroundImage: 'linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)',
+                    backgroundImage: 'linear-gradient(currentColor 1px, transparent 1px), linear-gradient(90deg, currentColor 1px, transparent 1px)',
                     backgroundSize: '40px 40px',
-                    opacity: 0.05
+                    color: 'inherit' // Inherits text-black or text-white from body
                 }}
             />
 
@@ -65,15 +65,15 @@ export const Search: React.FC = () => {
             <main className="container mx-auto px-4 py-6 relative z-10">
 
                 {/* Tabs Bar */}
-                <div className="flex gap-2 mb-6 overflow-x-auto pb-2 border-b-2 border-black/10">
+                <div className="flex gap-2 mb-6 overflow-x-auto pb-2 border-b-2 border-black/10 dark:border-white/20">
                     {tabs.map(tab => (
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab)}
-                            className={`px-4 py-2 font-mono font-bold text-sm border-2 border-black transition-all shadow-[2px_2px_0px_#000]
+                            className={`px-4 py-2 font-mono font-bold text-sm border-2 border-black dark:border-white transition-all shadow-[2px_2px_0px_#000] dark:shadow-[2px_2px_0px_#fff]
                 ${activeTab === tab
                                     ? 'bg-coral text-white translate-y-0.5 shadow-none'
-                                    : 'bg-white hover:-translate-y-0.5 hover:shadow-[4px_4px_0px_#000]'
+                                    : 'bg-white dark:bg-zinc-800 dark:text-white hover:-translate-y-0.5 hover:shadow-[4px_4px_0px_#000] dark:hover:shadow-[4px_4px_0px_#fff]'
                                 }`}
                         >
                             {tab}
@@ -82,30 +82,30 @@ export const Search: React.FC = () => {
                 </div>
 
                 {loading && (
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6 animate-pulse">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6 animate-pulse">
                         {[...Array(8)].map((_, i) => (
-                            <div key={i} className="h-64 bg-white border-3 border-black shadow-retro opacity-50"></div>
+                            <div key={i} className="h-64 bg-white dark:bg-slate-800 border-3 border-black dark:border-white shadow-retro dark:shadow-[4px_4px_0px_#000] opacity-50"></div>
                         ))}
                     </div>
                 )}
 
                 {error && (
-                    <div className="bg-red-50 border-3 border-black p-6 shadow-retro flex items-center gap-4 max-w-2xl mx-auto mt-10">
-                        <AlertCircle className="w-8 h-8 text-red-500" />
+                    <div className="bg-red-50 dark:bg-red-900/20 border-3 border-black dark:border-white p-6 shadow-retro dark:shadow-[4px_4px_0px_#000] flex items-center gap-4 max-w-2xl mx-auto mt-10">
+                        <AlertCircle className="w-8 h-8 text-red-500 dark:text-red-400" />
                         <div>
-                            <h3 className="font-bold text-lg">Search Failed</h3>
-                            <p className="font-mono text-sm">{error}</p>
+                            <h3 className="font-bold text-lg text-black dark:text-white">Search Failed</h3>
+                            <p className="font-mono text-sm text-gray-700 dark:text-gray-300">{error}</p>
                         </div>
                     </div>
                 )}
 
                 {!loading && !error && results.length === 0 && query && (
-                    <div className="text-center py-20 bg-white border-3 border-black shadow-retro max-w-xl mx-auto">
-                        <h2 className="text-3xl font-black mb-4">No Blobs Found</h2>
-                        <p className="font-mono text-gray-500 mb-6">
+                    <div className="text-center py-20 bg-white dark:bg-slate-800 border-3 border-black dark:border-white shadow-retro dark:shadow-[4px_4px_0px_#000] max-w-xl mx-auto">
+                        <h2 className="text-3xl font-black mb-4 text-black dark:text-white">No Blobs Found</h2>
+                        <p className="font-mono text-gray-500 dark:text-gray-400 mb-6">
                             We couldn't find any images matching "{query}".
                         </p>
-                        <div className="inline-block bg-ocean-100 px-4 py-2 border-2 border-black font-mono text-sm">
+                        <div className="inline-block bg-ocean-100 dark:bg-cyan-900/50 px-4 py-2 border-2 border-black dark:border-white font-mono text-sm text-black dark:text-white">
                             Try searching for "cat", "cyberpunk", or "landscape"
                         </div>
                     </div>

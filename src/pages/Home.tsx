@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { SearchInput } from '../components/SearchInput';
 import { Marquee } from '../components/Marquee';
+import { ThemeToggle } from '../components/ThemeToggle';
 import { api } from '../lib/api';
 
 interface HomeProps {
@@ -12,9 +13,16 @@ export const Home: React.FC<HomeProps> = ({ onNavigate }) => {
 
     useEffect(() => {
         // Quick stats fetch for "alive" feel
-        api.getStats().then((data) => {
-            setStats({ total: data.total_embeddings, built: data.index_built });
-        }).catch(console.error);
+        const fetchStats = async () => {
+            try {
+                const data = await api.getStats();
+                setStats({ total: data.total_embeddings, built: data.index_built });
+            } catch (error) {
+                console.error('Failed to fetch stats:', error);
+            }
+        };
+
+        fetchStats();
     }, []);
 
     const handleSearch = (query: string) => {
@@ -22,37 +30,42 @@ export const Home: React.FC<HomeProps> = ({ onNavigate }) => {
     };
 
     return (
-        <div className="min-h-screen flex flex-col items-center p-4 relative overflow-hidden bg-ocean-50">
+        <div className="min-h-screen flex flex-col items-center p-4 relative overflow-hidden bg-ocean-50 dark:bg-slate-900 transition-colors duration-300">
+            {/* Theme Toggle - Absolute Top Right */}
+            <div className="absolute top-6 right-6 z-50">
+                <ThemeToggle />
+            </div>
             {/* Retro Grid Background */}
             <div className="absolute inset-0 z-0 pointer-events-none"
                 style={{
-                    backgroundImage: 'linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)',
+                    backgroundImage: 'linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px)',
                     backgroundSize: '40px 40px',
-                    opacity: 0.05
                 }}
-            />
+            >
+                <div className="absolute inset-0 bg-ocean-50 dark:bg-slate-900 opacity-90 transition-colors duration-300"></div>
+            </div>
 
             <Marquee items={['Decentralized Search', 'Walrus Protocol', 'Omura API', 'Vector Search']} className="w-full rotate-1 mt-4 z-10" />
 
             {/* Main Content */}
             <div className="flex-1 flex flex-col items-center justify-center w-full max-w-4xl mx-auto z-10 relative">
                 {/* Decorative Blobs */}
-                <div className="absolute top-1/4 left-10 w-32 h-32 bg-ocean-300 border-3 border-black shadow-retro animate-float opacity-80 hidden lg:block rotate-12"></div>
-                <div className="absolute bottom-1/4 right-10 w-24 h-24 bg-coral border-3 border-black shadow-retro animate-float animation-delay-2000 opacity-80 hidden lg:block -rotate-12 rounded-none"></div>
+                <div className="absolute top-1/4 left-10 w-32 h-32 bg-ocean-300 border-3 border-black dark:border-white shadow-retro dark:shadow-retro-lg animate-float opacity-80 hidden lg:block rotate-12"></div>
+                <div className="absolute bottom-1/4 right-10 w-24 h-24 bg-coral border-3 border-black dark:border-white shadow-retro dark:shadow-retro-lg animate-float animation-delay-2000 opacity-80 hidden lg:block -rotate-12 rounded-none"></div>
 
                 <div className="mb-8 md:mb-12 relative flex-center flex-col transform hover:scale-105 transition-transform duration-500">
-                    <div className="w-40 h-40 md:w-56 md:h-56 bg-white border-4 border-black shadow-retro-lg flex-center mb-6 md:mb-8 overflow-hidden relative group">
+                    <div className="w-40 h-40 md:w-56 md:h-56 bg-white border-4 border-black dark:border-white shadow-retro-lg dark:shadow-[8px_8px_0px_#000] flex-center mb-6 md:mb-8 overflow-hidden relative group">
                         <div className="absolute inset-0 bg-ocean-200 opacity-0 group-hover:opacity-20 transition-opacity"></div>
                         <img src="/logo.png" alt="Omura Walrus" className="w-full h-full object-cover p-2" />
                     </div>
-                    <h1 className="text-5xl md:text-8xl font-black tracking-tighter text-black mb-2 bg-white px-4 md:px-6 py-2 border-3 border-black shadow-retro" style={{ textShadow: 'none' }}>
+                    <h1 className="text-5xl md:text-8xl font-black tracking-tighter text-black dark:text-white mb-2 bg-white dark:bg-slate-800 px-4 md:px-6 py-2 border-3 border-black dark:border-white shadow-retro dark:shadow-retro-lg transition-colors" style={{ textShadow: 'none' }}>
                         OMURA
                     </h1>
                     <div className="flex gap-2 mt-4">
-                        <span className="font-mono text-xs md:text-sm font-bold bg-ocean-400 text-white border-2 border-black px-2 md:px-3 py-1 shadow-retro-sm">
+                        <span className="font-mono text-xs md:text-sm font-bold bg-ocean-400 dark:bg-cyan-700 text-white border-2 border-black dark:border-white px-2 md:px-3 py-1 shadow-retro-sm dark:shadow-[2px_2px_0px_#000]">
                             BETA
                         </span>
-                        <span className="font-mono text-xs md:text-sm bg-white border-2 border-black px-2 md:px-3 py-1 shadow-retro-sm">
+                        <span className="font-mono text-xs md:text-sm bg-white dark:bg-slate-800 text-black dark:text-white border-2 border-black dark:border-white px-2 md:px-3 py-1 shadow-retro-sm dark:shadow-[2px_2px_0px_#000]">
                             v0.1.0
                         </span>
                     </div>
@@ -63,13 +76,13 @@ export const Home: React.FC<HomeProps> = ({ onNavigate }) => {
                 {/* Stats Grid */}
                 {stats && (
                     <div className="grid grid-cols-2 gap-4 w-full max-w-lg">
-                        <div className="bg-white border-3 border-black p-4 shadow-retro-sm text-center">
-                            <div className="text-xs font-mono text-gray-500 uppercase mb-1">Total Blobs</div>
-                            <div className="text-2xl font-black">{stats.total.toLocaleString()}</div>
+                        <div className="bg-white dark:bg-slate-800 border-3 border-black dark:border-white p-4 shadow-retro-sm dark:shadow-[4px_4px_0px_#000] text-center transition-colors">
+                            <div className="text-xs font-mono text-gray-500 dark:text-gray-400 uppercase mb-1">Total Blobs</div>
+                            <div className="text-2xl font-black text-black dark:text-white">{stats.total.toLocaleString()}</div>
                         </div>
-                        <div className="bg-white border-3 border-black p-4 shadow-retro-sm text-center">
-                            <div className="text-xs font-mono text-gray-500 uppercase mb-1">Index Status</div>
-                            <div className={`text-2xl font-black ${stats.built ? 'text-green-600' : 'text-coral'}`}>
+                        <div className="bg-white dark:bg-slate-800 border-3 border-black dark:border-white p-4 shadow-retro-sm dark:shadow-[4px_4px_0px_#000] text-center transition-colors">
+                            <div className="text-xs font-mono text-gray-500 dark:text-gray-400 uppercase mb-1">Index Status</div>
+                            <div className={`text-2xl font-black ${stats.built ? 'text-green-600 dark:text-green-400' : 'text-coral'}`}>
                                 {stats.built ? 'READY' : 'BUILDING'}
                             </div>
                         </div>

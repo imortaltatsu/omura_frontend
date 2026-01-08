@@ -5,6 +5,7 @@ export interface SearchResult {
     similarity: number;
     extension?: string | null;
     kind?: string | null;
+    is_nsfw?: boolean;
 }
 
 export interface SearchResponse {
