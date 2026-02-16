@@ -47,7 +47,7 @@ export const Search: React.FC = () => {
         fetchResults();
     }, [query]);
 
-    const tabs = ['All', 'Images', 'Web', 'Audio', 'Video'];
+    const tabs = ['Images'];
 
     return (
         <div className="min-h-screen bg-ocean-50 dark:bg-zinc-900 relative transition-colors duration-300">
