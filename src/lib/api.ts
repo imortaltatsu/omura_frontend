@@ -1,4 +1,4 @@
-import type { SearchRequest, SearchResponse, VectorStoreStats } from './types';
+import type { SearchRequest, SearchResponse, SearchResult, VectorStoreStats, MediaCounters, ClassifierCounts } from './types';
 
 const API_BASE_URL = import.meta.env.DEV ? '/api' : 'https://api.omura.fun';
 
@@ -60,5 +60,63 @@ export const api = {
         }
 
         return response.json();
-    }
+    },
+
+    getMediaCounters: async (): Promise<MediaCounters> => {
+        const response = await fetchWithRetry(`${API_BASE_URL}/search/dashboard/media-counters`);
+
+        if (!response.ok) {
+            throw new Error(`Failed to fetch media counters: ${response.statusText}`);
+        }
+
+        return response.json();
+    },
+
+    reverseImageSearch: async (file: File, topK = 10, excludeNsfw = true): Promise<SearchResponse> => {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('top_k', String(topK));
+        formData.append('exclude_nsfw', String(excludeNsfw));
+
+        const response = await fetchWithRetry(`${API_BASE_URL}/search/reverse-image`, {
+            method: 'POST',
+            body: formData,
+        });
+
+        if (!response.ok) {
+            try {
+                const errorData = await response.json();
+                throw new Error(JSON.stringify(errorData));
+            } catch {
+                throw new Error(`Reverse image search failed: ${response.statusText}`);
+            }
+        }
+
+        const data = await response.json();
+
+        // Normalize response: the reverse-image API may return results
+        // in a different shape than the text search API
+        const rawResults = data.results ?? data ?? [];
+        const results: SearchResult[] = (Array.isArray(rawResults) ? rawResults : []).map((item: any) => ({
+            blob_id: item.blob_id ?? item.blobId ?? '',
+            mime_type: item.mime_type ?? item.mimeType ?? 'image/unknown',
+            size: item.size ?? 0,
+            similarity: item.similarity ?? item.score ?? item.distance ?? 0,
+            extension: item.extension ?? null,
+            kind: item.kind ?? null,
+            is_nsfw: item.is_nsfw ?? item.isNsfw ?? false,
+        }));
+
+        return { results, total: data.total ?? results.length };
+    },
+
+    getClassifierCounts: async (): Promise<ClassifierCounts> => {
+        const response = await fetchWithRetry(`${API_BASE_URL}/search/dashboard/classifier-counts`);
+
+        if (!response.ok) {
+            throw new Error(`Failed to fetch classifier counts: ${response.statusText}`);
+        }
+
+        return response.json();
+    },
 };

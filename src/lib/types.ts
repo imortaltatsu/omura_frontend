@@ -16,6 +16,7 @@ export interface SearchResponse {
 export interface SearchRequest {
     query: string;
     top_k?: number;
+    exclude_nsfw?: boolean;
 }
 
 export interface VectorStoreStats {
@@ -26,4 +27,17 @@ export interface VectorStoreStats {
 
 export interface ApiError {
     detail: string | { loc: (string | number)[]; msg: string; type: string }[];
+}
+
+export interface MediaCounters {
+    total_blobs: number;
+    active_blobs: number;
+    identified_image: number;
+    identified_video: number;
+    identified_audio: number;
+    modality_counts_all: Record<string, number>;
+}
+
+export interface ClassifierCounts {
+    categories: Record<string, number>;
 }

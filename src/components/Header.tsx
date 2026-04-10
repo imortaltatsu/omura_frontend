@@ -3,7 +3,11 @@ import { useLocation } from 'wouter';
 import { ThemeToggle } from './ThemeToggle';
 import { SearchInput } from './SearchInput';
 
-export const Header: React.FC = () => {
+interface HeaderProps {
+    onImageSearch?: (file: File) => void;
+}
+
+export const Header: React.FC<HeaderProps> = ({ onImageSearch }) => {
     const [, setLocation] = useLocation();
 
     const handleSearch = (query: string) => {
@@ -30,6 +34,7 @@ export const Header: React.FC = () => {
             <div className="flex-1 max-w-xl mx-auto">
                 <SearchInput
                     onSearch={handleSearch}
+                    onImageSearch={onImageSearch}
                     compact
                     className="w-full"
                     initialQuery={new URLSearchParams(window.location.search).get('q') || ''}

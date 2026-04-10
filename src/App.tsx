@@ -1,6 +1,7 @@
 import { Route, Switch, useLocation } from 'wouter';
 import { Home } from './pages/Home';
 import { Search } from './pages/Search';
+import { Dashboard } from './pages/Dashboard';
 
 function App() {
   const [, setLocation] = useLocation();
@@ -10,6 +11,7 @@ function App() {
       <Switch>
         <Route path="/" component={() => <Home onNavigate={setLocation} />} />
         <Route path="/search" component={Search} />
+        <Route path="/dashboard" component={Dashboard} />
 
         {/* 404 / Catch-all */}
         <Route>

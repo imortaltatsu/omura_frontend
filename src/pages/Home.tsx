@@ -3,22 +3,22 @@ import { SearchInput } from '../components/SearchInput';
 import { Marquee } from '../components/Marquee';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { api } from '../lib/api';
+import { BarChart3, Github, Twitter } from 'lucide-react';
 
 interface HomeProps {
     onNavigate: (path: string) => void;
 }
 
 export const Home: React.FC<HomeProps> = ({ onNavigate }) => {
-    const [stats, setStats] = useState<{ total: number; built: boolean } | null>(null);
+    const [totalBlobs, setTotalBlobs] = useState<number | null>(null);
 
     useEffect(() => {
-        // Quick stats fetch for "alive" feel
         const fetchStats = async () => {
             try {
-                const data = await api.getStats();
-                setStats({ total: data.total_embeddings, built: data.index_built });
+                const data = await api.getMediaCounters();
+                setTotalBlobs(data.total_blobs);
             } catch (error) {
-                console.error('Failed to fetch stats:', error);
+                console.error('Failed to fetch media counters:', error);
             }
         };
 
@@ -29,12 +29,16 @@ export const Home: React.FC<HomeProps> = ({ onNavigate }) => {
         onNavigate(`/search?q=${encodeURIComponent(query)}`);
     };
 
+    const handleImageSearch = (file: File) => {
+        onNavigate('/search?reverse=1');
+        // Dispatch event after navigation so Search page can pick it up
+        setTimeout(() => {
+            window.dispatchEvent(new CustomEvent('omura-reverse-search', { detail: file }));
+        }, 100);
+    };
+
     return (
         <div className="min-h-screen flex flex-col items-center p-4 relative overflow-hidden bg-ocean-50 dark:bg-slate-900 transition-colors duration-300">
-            {/* Theme Toggle - Absolute Top Right */}
-            <div className="absolute top-6 right-6 z-50">
-                <ThemeToggle />
-            </div>
             {/* Retro Grid Background */}
             <div className="absolute inset-0 z-0 pointer-events-none"
                 style={{
@@ -61,40 +65,61 @@ export const Home: React.FC<HomeProps> = ({ onNavigate }) => {
                     <h1 className="text-5xl md:text-8xl font-black tracking-tighter text-black dark:text-white mb-2 bg-white dark:bg-slate-800 px-4 md:px-6 py-2 border-3 border-black dark:border-white shadow-retro dark:shadow-retro-lg transition-colors" style={{ textShadow: 'none' }}>
                         OMURA
                     </h1>
-                    <div className="flex gap-2 mt-4">
-                        <span className="font-mono text-xs md:text-sm font-bold bg-ocean-400 dark:bg-cyan-700 text-white border-2 border-black dark:border-white px-2 md:px-3 py-1 shadow-retro-sm dark:shadow-[2px_2px_0px_#000]">
-                            BETA
-                        </span>
-                        <span className="font-mono text-xs md:text-sm bg-white dark:bg-slate-800 text-black dark:text-white border-2 border-black dark:border-white px-2 md:px-3 py-1 shadow-retro-sm dark:shadow-[2px_2px_0px_#000]">
-                            v0.1.0
-                        </span>
-                    </div>
                 </div>
 
-                <SearchInput onSearch={handleSearch} className="mb-8 md:mb-12 w-full px-4 md:px-0" />
+                <SearchInput onSearch={handleSearch} onImageSearch={handleImageSearch} className="mb-8 md:mb-12 w-full px-4 md:px-0" />
 
-                {/* Stats Grid */}
-                {stats && (
-                    <div className="grid grid-cols-2 gap-4 w-full max-w-lg">
-                        <div className="bg-white dark:bg-slate-800 border-3 border-black dark:border-white p-4 shadow-retro-sm dark:shadow-[4px_4px_0px_#000] text-center transition-colors">
-                            <div className="text-xs font-mono text-gray-500 dark:text-gray-400 uppercase mb-1">Total Blobs</div>
-                            <div className="text-2xl font-black text-black dark:text-white">{stats.total.toLocaleString()}</div>
-                        </div>
-                        <div className="bg-white dark:bg-slate-800 border-3 border-black dark:border-white p-4 shadow-retro-sm dark:shadow-[4px_4px_0px_#000] text-center transition-colors">
-                            <div className="text-xs font-mono text-gray-500 dark:text-gray-400 uppercase mb-1">Index Status</div>
-                            <div className={`text-2xl font-black ${stats.built ? 'text-green-600 dark:text-green-400' : 'text-coral'}`}>
-                                {stats.built ? 'READY' : 'BUILDING'}
-                            </div>
+                {/* Stats & Dashboard */}
+                <div className="grid grid-cols-2 gap-4 w-full max-w-lg">
+                    <div className="bg-white dark:bg-slate-800 border-3 border-black dark:border-white p-4 shadow-retro-sm dark:shadow-[4px_4px_0px_#000] text-center transition-colors">
+                        <div className="text-xs font-mono text-gray-500 dark:text-gray-400 uppercase mb-1">Total Blobs</div>
+                        <div className="text-2xl font-black text-black dark:text-white">
+                            {totalBlobs !== null ? totalBlobs.toLocaleString() : '—'}
                         </div>
                     </div>
-                )}
+                    <button
+                        onClick={() => onNavigate('/dashboard')}
+                        className="bg-coral border-3 border-black dark:border-white p-4 shadow-retro-sm dark:shadow-[4px_4px_0px_#000] text-center transition-all hover:shadow-retro-hover active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+                    >
+                        <div className="text-xs font-mono text-white/80 uppercase mb-1">Explore</div>
+                        <div className="text-2xl font-black text-white flex items-center justify-center gap-2">
+                            <BarChart3 className="w-5 h-5" />
+                            DASHBOARD
+                        </div>
+                    </button>
+                </div>
             </div>
 
             <Marquee items={['Powered by Walrus', 'Store Forever', 'Unstoppable Blob Storage', 'Sui Network']} direction="right" className="w-full -rotate-1 mb-8 z-10 bg-ocean-600 border-y-3" />
 
-            <div className="absolute bottom-4 text-center w-full text-xs font-mono text-gray-500 z-20">
-                Powered by Walrus Protocol & Omura API
-            </div>
+            {/* Footer */}
+            <footer className="w-full z-20 border-t-3 border-black dark:border-white bg-white dark:bg-slate-800 transition-colors">
+                <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+                    <span className="text-xs font-mono text-gray-500 dark:text-gray-400">
+                        Powered by Walrus Protocol & Omura API
+                    </span>
+                    <div className="flex items-center gap-3">
+                        <a
+                            href="https://github.com/imortaltatsu/omura_frontend"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors"
+                        >
+                            <Github className="w-5 h-5" />
+                        </a>
+                        <a
+                            href="https://x.com/OmuraHQ"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors"
+                        >
+                            <Twitter className="w-5 h-5" />
+                        </a>
+                        <div className="w-px h-5 bg-gray-300 dark:bg-gray-600" />
+                        <ThemeToggle />
+                    </div>
+                </div>
+            </footer>
         </div>
     );
 };
