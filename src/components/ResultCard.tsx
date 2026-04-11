@@ -60,7 +60,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({ result }) => {
                         IMG
                     </span>
                     <div className="text-xs font-bold bg-coral dark:bg-pink-600 text-white border border-black dark:border-white px-1.5 py-0.5 shadow-[1px_1px_0px_#000] dark:shadow-[2px_2px_0px_#000]">
-                        {result.similarity.toFixed(0)}%
+                        {(result.similarity ?? 0).toFixed(0)}%
                     </div>
                 </div>
 
