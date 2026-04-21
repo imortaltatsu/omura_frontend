@@ -29,6 +29,32 @@ const fetchWithRetry = async (url: string, options: RequestInit = {}, retries = 
     }
 };
 
+const normalizeSearchResults = (data: any): SearchResponse => {
+    const rawResults = data.results ?? data ?? [];
+    const results: SearchResult[] = (Array.isArray(rawResults) ? rawResults : []).map((item: any) => {
+        // Prioritize 'score' from the example backend response
+        let similarity = item.score ?? item.similarity ?? item.distance ?? 0;
+        
+        // Conditional scaling: if it's very small (0-1), it's likely a decimal percentage.
+        // If it's already > 1 (like 97.7), we keep it as is.
+        if (typeof similarity === 'number' && similarity > 0 && similarity <= 1) {
+            similarity *= 100;
+        }
+
+        return {
+            blob_id: item.blob_id ?? item.blobId ?? '',
+            mime_type: item.mime_type ?? item.mimeType ?? 'image/unknown',
+            size: item.size ?? 0,
+            similarity,
+            extension: item.extension ?? null,
+            kind: item.kind ?? null,
+            is_nsfw: item.is_nsfw ?? item.isNsfw ?? false,
+        };
+    });
+
+    return { results, total: data.total ?? results.length };
+};
+
 export const api = {
     search: async (req: SearchRequest): Promise<SearchResponse> => {
         const response = await fetchWithRetry(`${API_BASE_URL}/search/`, {
@@ -49,7 +75,8 @@ export const api = {
             }
         }
 
-        return response.json();
+        const data = await response.json();
+        return normalizeSearchResults(data);
     },
 
     getStats: async (): Promise<VectorStoreStats> => {
@@ -93,21 +120,7 @@ export const api = {
         }
 
         const data = await response.json();
-
-        // Normalize response: the reverse-image API may return results
-        // in a different shape than the text search API
-        const rawResults = data.results ?? data ?? [];
-        const results: SearchResult[] = (Array.isArray(rawResults) ? rawResults : []).map((item: any) => ({
-            blob_id: item.blob_id ?? item.blobId ?? '',
-            mime_type: item.mime_type ?? item.mimeType ?? 'image/unknown',
-            size: item.size ?? 0,
-            similarity: item.similarity ?? item.score ?? item.distance ?? 0,
-            extension: item.extension ?? null,
-            kind: item.kind ?? null,
-            is_nsfw: item.is_nsfw ?? item.isNsfw ?? false,
-        }));
-
-        return { results, total: data.total ?? results.length };
+        return normalizeSearchResults(data);
     },
 
     getClassifierCounts: async (): Promise<ClassifierCounts> => {
