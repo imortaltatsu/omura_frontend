@@ -4,7 +4,7 @@ const API_BASE_URL = import.meta.env.DEV ? '/api' : 'https://api.omura.fun';
 
 // Used for fetching the actual image content (Walrus Mainnet Aggregator)
 export const getBlobUrl = (blobId: string) => {
-    return `https://aggregator.walrus-mainnet.walrus.space/v1/blobs/${blobId}`;
+    return `https://agrregator.omura.fun/v1/blobs/${blobId}`;
 };
 
 // Used for the navigation link when clicking the result
