@@ -2,8 +2,15 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Header } from '../components/Header';
 import { ResultCard } from '../components/ResultCard';
 import { api } from '../lib/api';
-import type { SearchResult } from '../lib/types';
-import { AlertCircle, ShieldOff, Shield } from 'lucide-react';
+import type { SearchResult, Modality, Provenance } from '../lib/types';
+import { AlertCircle, ShieldOff, Shield, LayoutGrid, Image as ImageIcon, Music, Video } from 'lucide-react';
+
+const MODALITIES: { value: Modality; label: string; icon: React.ReactNode }[] = [
+    { value: 'all', label: 'All', icon: <LayoutGrid className="w-3.5 h-3.5" /> },
+    { value: 'image', label: 'Image', icon: <ImageIcon className="w-3.5 h-3.5" /> },
+    { value: 'audio', label: 'Audio', icon: <Music className="w-3.5 h-3.5" /> },
+    { value: 'video', label: 'Video', icon: <Video className="w-3.5 h-3.5" /> },
+];
 
 export const Search: React.FC = () => {
     const [searchParams, setSearchParams] = useState(window.location.search);
@@ -11,10 +18,19 @@ export const Search: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [reverseImageName, setReverseImageName] = useState<string | null>(null);
+    // Authoritative reverse-image provenance (set only for reverse-image searches).
+    const [exactDuplicateBlobId, setExactDuplicateBlobId] = useState<string | null>(null);
+    const [provenance, setProvenance] = useState<Provenance | null>(null);
+    const [duplicatesFound, setDuplicatesFound] = useState(0);
     const [excludeNsfw, setExcludeNsfw] = useState(() => localStorage.getItem('omura-exclude-nsfw') !== 'false');
 
     // Keep a ref to the last uploaded file so we can re-search on toggle
     const lastFileRef = useRef<File | null>(null);
+
+    // Drop a result whose blob failed to load (aggregator 404 for expired/broken blobs).
+    const handleBroken = useCallback((blobId: string) => {
+        setResults(prev => prev.filter(r => r.blob_id !== blobId));
+    }, []);
 
     const toggleNsfw = () => {
         setExcludeNsfw(prev => {
@@ -33,6 +49,9 @@ export const Search: React.FC = () => {
         try {
             const data = await api.reverseImageSearch(file, 50, nsfw ?? excludeNsfw);
             setResults(data.results);
+            setExactDuplicateBlobId(data.exact_duplicate_blob_id ?? null);
+            setProvenance(data.provenance ?? null);
+            setDuplicatesFound(data.duplicates_found ?? 0);
         } catch (err: any) {
             setError(err.message || 'Reverse image search failed');
         } finally {
@@ -63,19 +82,37 @@ export const Search: React.FC = () => {
         return () => window.removeEventListener('omura-reverse-search', onReverseSearch);
     }, []);
 
-    const query = new URLSearchParams(searchParams).get('q') || '';
+    const parsedParams = new URLSearchParams(searchParams);
+    const query = parsedParams.get('q') || '';
+    const modalityParam = parsedParams.get('kind');
+    const modality: Modality = (['all', 'image', 'audio', 'video'] as Modality[]).includes(modalityParam as Modality)
+        ? (modalityParam as Modality)
+        : 'all';
 
-    // Re-fetch text search when query or excludeNsfw changes
+    const setModality = (next: Modality) => {
+        const params = new URLSearchParams(window.location.search);
+        if (next === 'all') params.delete('kind');
+        else params.set('kind', next);
+        const newPath = `/search?${params.toString()}`;
+        window.history.pushState(null, '', newPath);
+        window.dispatchEvent(new CustomEvent('omura-search', { detail: newPath }));
+    };
+
+    // Re-fetch text search when query, modality, or excludeNsfw changes
     useEffect(() => {
         if (!query) return;
         setReverseImageName(null);
         lastFileRef.current = null;
+        // Provenance is reverse-image only — clear it for text searches.
+        setExactDuplicateBlobId(null);
+        setProvenance(null);
+        setDuplicatesFound(0);
 
         const fetchResults = async () => {
             setLoading(true);
             setError(null);
             try {
-                const data = await api.search({ query, top_k: 50, exclude_nsfw: excludeNsfw });
+                const data = await api.search({ query, top_k: 50, exclude_nsfw: excludeNsfw }, modality);
                 setResults(data.results);
             } catch (err: any) {
                 setError(err.message || 'Something went wrong');
@@ -85,7 +122,7 @@ export const Search: React.FC = () => {
         };
 
         fetchResults();
-    }, [query, excludeNsfw]);
+    }, [query, excludeNsfw, modality]);
 
     // Re-fetch reverse image search when excludeNsfw changes
     useEffect(() => {
@@ -107,8 +144,30 @@ export const Search: React.FC = () => {
 
             <main className="container mx-auto px-4 py-6 relative z-10">
 
-                {/* NSFW Toggle */}
-                <div className="flex justify-end mb-4">
+                {/* Modality + NSFW Toggles */}
+                <div className="flex flex-wrap justify-between items-center gap-3 mb-4">
+                    {/* Modality toggle (disabled during reverse-image search, which is image-only) */}
+                    <div className="flex border-2 border-black dark:border-white shadow-retro-sm dark:shadow-[2px_2px_0px_#000] divide-x-2 divide-black dark:divide-white">
+                        {MODALITIES.map((m) => {
+                            const active = modality === m.value;
+                            return (
+                                <button
+                                    key={m.value}
+                                    onClick={() => setModality(m.value)}
+                                    disabled={!!reverseImageName}
+                                    className={`flex items-center gap-1.5 px-3 py-1.5 font-mono text-xs font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+                                        active
+                                            ? 'bg-ocean-400 dark:bg-cyan-600 text-white'
+                                            : 'bg-white dark:bg-slate-800 text-black dark:text-white hover:bg-ocean-100 dark:hover:bg-slate-700'
+                                    }`}
+                                >
+                                    {m.icon}
+                                    <span className="hidden sm:inline">{m.label}</span>
+                                </button>
+                            );
+                        })}
+                    </div>
+
                     <button
                         onClick={toggleNsfw}
                         className={`flex items-center gap-2 px-3 py-1.5 font-mono text-xs font-bold border-2 border-black dark:border-white shadow-retro-sm dark:shadow-[2px_2px_0px_#000] transition-all active:translate-x-[1px] active:translate-y-[1px] active:shadow-none ${
@@ -146,7 +205,7 @@ export const Search: React.FC = () => {
                         <p className="font-mono text-gray-500 dark:text-gray-400 mb-6">
                             {reverseImageName
                                 ? `No similar images found for "${reverseImageName}".`
-                                : `We couldn't find any images matching "${query}".`
+                                : `We couldn't find any ${modality === 'all' ? 'media' : modality} matching "${query}".`
                             }
                         </p>
                         <div className="inline-block bg-ocean-100 dark:bg-cyan-900/50 px-4 py-2 border-2 border-black dark:border-white font-mono text-sm text-black dark:text-white">
@@ -155,10 +214,31 @@ export const Search: React.FC = () => {
                     </div>
                 )}
 
+                {/* Reverse-image provenance summary */}
+                {!loading && !error && reverseImageName && (exactDuplicateBlobId || duplicatesFound > 0) && (
+                    <div className="mb-4 bg-green-50 dark:bg-green-900/20 border-3 border-black dark:border-white p-4 shadow-retro dark:shadow-[4px_4px_0px_#000] max-w-2xl">
+                        <h3 className="font-black text-black dark:text-white uppercase text-sm mb-1">
+                            {exactDuplicateBlobId ? 'Exact Match Found' : `${duplicatesFound} Duplicate${duplicatesFound === 1 ? '' : 's'} Found`}
+                        </h3>
+                        {provenance && (provenance.owner || provenance.parent_quilt_id) && (
+                            <div className="font-mono text-xs text-gray-700 dark:text-gray-300 space-y-0.5">
+                                {provenance.owner && <div className="truncate">original holder: {provenance.owner}</div>}
+                                {provenance.parent_quilt_id && <div className="truncate">source collection: {provenance.parent_quilt_id}</div>}
+                            </div>
+                        )}
+                    </div>
+                )}
+
                 {!loading && !error && results.length > 0 && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 pb-20">
                         {results.map((result, idx) => (
-                            <ResultCard key={result.blob_id + idx} result={result} />
+                            <ResultCard
+                                key={result.blob_id + idx}
+                                result={result}
+                                exactDuplicateBlobId={exactDuplicateBlobId}
+                                provenance={provenance}
+                                onBroken={handleBroken}
+                            />
                         ))}
                     </div>
                 )}

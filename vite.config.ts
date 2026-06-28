@@ -7,7 +7,8 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://api.omura.fun',
+        // apiv2 — current backend with the multimodal (audio/video/in-video) routes.
+        target: 'https://apiv2.omura.fun',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
       },
