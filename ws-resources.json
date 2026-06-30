@@ -1,0 +1,6 @@
+{
+  "routes": {
+    "/*": "/index.html"
+  },
+  "object_id": "0x3b5ac34782e3ead72f9d43a3ee46464eb170bd52ad43c3d8b7f5aef0847fbdb7"
+}
