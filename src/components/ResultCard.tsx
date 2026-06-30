@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import type { SearchResult, VideoSegment, Provenance } from '../lib/types';
 import { getBlobUrl, getBlobPageUrl, api } from '../lib/api';
 import { FileQuestion, Music, Play, Copy, Search as SearchIcon, Loader2 } from 'lucide-react';
@@ -53,6 +53,36 @@ export const ResultCard: React.FC<ResultCardProps> = ({ result, exactDuplicateBl
     const blurred = isNsfw && !isRevealed;
     // Authoritative exact-duplicate match from reverse-image search (not a score heuristic).
     const isExactDuplicate = !!exactDuplicateBlobId && result.blob_id === exactDuplicateBlobId;
+
+    // Aggregators serve audio with no usable Content-Type *and* `nosniff`, so the
+    // <audio> decoder rejects the bytes. Fetch them and re-wrap in a typed Blob to
+    // force the MIME (CORS is open, so fetch works). Only needed for audio.
+    const [audioSrc, setAudioSrc] = useState<string | null>(null);
+    useEffect(() => {
+        if (kind !== 'audio' || blurred) return;
+        let objectUrl: string | null = null;
+        let cancelled = false;
+        (async () => {
+            try {
+                const res = await fetch(mediaUrl);
+                if (!res.ok) throw new Error(String(res.status));
+                const raw = await res.blob();
+                const typed = raw.type.startsWith('audio/')
+                    ? raw
+                    : new Blob([raw], { type: result.mime_type || 'audio/mpeg' });
+                objectUrl = URL.createObjectURL(typed);
+                if (cancelled) URL.revokeObjectURL(objectUrl);
+                else setAudioSrc(objectUrl);
+            } catch {
+                if (!cancelled) handleMediaError();
+            }
+        })();
+        return () => {
+            cancelled = true;
+            if (objectUrl) URL.revokeObjectURL(objectUrl);
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [mediaUrl, kind, blurred]);
 
     const seekTo = (segment: VideoSegment) => {
         const video = videoRef.current;
@@ -110,9 +140,9 @@ export const ResultCard: React.FC<ResultCardProps> = ({ result, exactDuplicateBl
                         <Music className="w-7 h-7 text-purple-600 dark:text-purple-300" />
                     </div>
                     <audio
-                        src={blurred ? undefined : mediaUrl}
+                        src={blurred ? undefined : (audioSrc ?? undefined)}
                         controls
-                        preload="none"
+                        preload="metadata"
                         onError={handleMediaError}
                         className="w-full"
                     />
